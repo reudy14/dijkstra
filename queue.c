@@ -1,119 +1,60 @@
 #include "queue.h"
 #include "queue_utils.h"
-#include "utils.h"
-#include "constants.h"
 
 #include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include <limits.h>
 
-queue_t *queue_init()
+queue_t *queue_init(int size)
 {
-    queue_t *queue = calloc(1, sizeof(queue_t));
-    queue->min = NULL;
-    my_assert(queue != NULL, ERR_MEM);
+    queue_t *queue = malloc(sizeof(queue_t));
+    if (!queue)
+        return NULL;
+    if (!(queue->arr = calloc(size, sizeof(node_t))))
+        return NULL;
+    if (!(queue->lookup = calloc(size, sizeof(int))))
+        return NULL;
+    queue->cap = size;
+    queue->cnt = 0;
     return queue;
 }
 
-void queue_push(queue_t *queue, node_t *node)
+int queue_insert(queue_t *queue, unsigned long long key, int val)
 {
-    my_assert(queue != NULL && node != NULL, ERR_PARAMS);
-    if (queue->root)
-        node_insert(queue->root, node);
-    else
-        queue->root = node;
-    if (!queue->min || node->key < queue->min->key)
-        queue->min = node;
-}
-
-node_t *queue_insert(queue_t *queue, unsigned int key, int val)
-{
-    node_t *node = create_node(key, val);
-    queue_push(queue, node);
-    queue->count++;
-    return node;
+    queue->arr[queue->cnt].key = key;
+    queue->arr[queue->cnt].val = val;
+    queue->lookup[val] = queue->cnt;
+    bubble_up(queue, queue->cnt);
+    return queue->cnt++;
 }
 
 int queue_pop(queue_t *queue)
 {
-    if (queue->count == 0)
+    if (queue->cnt == 0)
         return -1;
-    node_t *min = queue->min;
-    int val = min->value;
-    move_children_to_root(queue, min);
-    queue->root = extract_node(min);
-    free(min);
-    queue->min = NULL;
-    queue->count--;
+    int val = queue->arr[0].val;
 
-    if (queue->count == 0)
-        return val;
-
-    int max_degree = (int)log2(queue->count) + 2;
-    node_t **nodes = calloc(max_degree, sizeof(node_t *));
-
-    node_t *roots = queue->root;
-    while (roots != NULL)
-    {
-        node_t *temp = roots;
-        roots = extract_node(roots);
-
-        while (nodes[temp->degree] != NULL)
-        {
-            int degree = temp->degree;
-
-            node_t *peer = nodes[degree];
-            node_t *parrent = temp->key < peer->key ? temp : peer;
-            node_t *child = temp->key < peer->key ? peer : temp;
-            add_child(parrent, child);
-
-            nodes[degree] = NULL;
-            temp = parrent;
-        }
-        nodes[temp->degree] = temp;
-    }
-    queue->root = NULL;
-
-    for (size_t i = 0; i < max_degree; i++)
-        if (nodes[i])
-            queue_push(queue, nodes[i]);
-    free(nodes);
+    swap(queue, 0, --queue->cnt);
+    bubble_down(queue, 0);
+    queue->lookup[val] = -1;
     return val;
 }
 
-node_t *queue_find(queue_t *queue, int val)
+void queue_decrese_key(queue_t *queue, int val, unsigned long long new)
 {
-    return find_val(queue->root, queue->root, val);
+    // for (size_t i = 0; i < queue->cap; i++)
+    //     printf("%d: %d\n", i, queue->lookup[i]);
+    // printf("%d %d\n\n", val, new);
+    int node = queue_find(queue, val);
+    queue->arr[node].key = new;
+    if (new < queue->arr[get_parrent(queue, node)].key)
+    {
+        bubble_up(queue, node);
+    }
 }
 
-void queue_decrese_key(queue_t *queue, node_t *node, unsigned int new_key)
+void queue_free(queue_t **queue_p)
 {
-    if (!node)
-        return;
-    if (new_key >= node->key)
-        return;
-    node->key = new_key;
-    node_t *parrent = get_parrent(node);
-    if (!parrent || parrent->key <= new_key)
-        return;
-
-    shift_to_root(queue, node);
-}
-
-node_t *list_concat(node_t *a, node_t *b)
-{
-    node_t *a_last = a->left;
-    a_last->right = b;
-    a->left = b->left;
-    b->left->right = a;
-    b->left = a_last;
-    return a;
-}
-
-void queue_free(queue_t *queue)
-{
-    while (queue->count != 0)
-        queue_pop(queue);
-    free(queue);
+    free((*queue_p)->arr);
+    free((*queue_p)->lookup);
+    free(*queue_p);
+    *queue_p = NULL;
 }

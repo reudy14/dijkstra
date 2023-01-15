@@ -1,6 +1,6 @@
 EXEC=test.o
 CC=clang
-CFLAGS= -Wall -std=c99 -lm
+CFLAGS= -Wall -Wnewline-eof -std=c99 -O3 -lm
 
 all:
 	$(CC) -c -g $(CFLAGS) *.c 
@@ -15,6 +15,14 @@ val: all
 gdb: all
 	gdb ./test.o
 
+n := 10
 test: all
-	../bin/tdijkstra-lnx -h -n 1000 -g graph.txt -p solutionFile.txt
+	./tdijkstra-lnx -h -n $(n) -g graph.txt
 	./test.o
+	./tdijkstra-lnx -t graph.txt solution.txt
+
+
+CFILES := $(wildcard *.c)
+CFILES := $(filter-out test.c, $(CFILES))
+zip: all
+	zip -r a.zip $(CFILES) *h

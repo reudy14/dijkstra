@@ -3,16 +3,13 @@
 
 #include "queue.h"
 
-void move_children_to_root(queue_t *queue, node_t *node);
-node_t *extract_node(node_t *node);
-void node_insert(node_t *node, node_t *add);
-node_t *find_val(node_t *node, node_t *start, int val);
-node_t *create_node(int key, int val);
-node_t *get_parrent(node_t *node);
+void swap(queue_t *queue, int a, int b);
+void bubble_up(queue_t *queue, int node);
+void bubble_down(queue_t *queue, int node);
+int get_parrent(queue_t *queue, int node);
+int get_left(queue_t *queue, int node);
+int get_right(queue_t *queue, int node);
 void queue_print(queue_t *queue);
-void node_print(node_t *node, int level);
-void add_child(node_t *parrent, node_t *child);
-void remove_child(node_t *parrent, node_t *child);
-void shift_to_root(queue_t *queue, node_t *node);
+int queue_find(queue_t *queue, int val);
 
 #endif
