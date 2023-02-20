@@ -2,6 +2,7 @@
 #include "queue_utils.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 queue_t *queue_init(int size)
 {
@@ -10,8 +11,9 @@ queue_t *queue_init(int size)
         return NULL;
     if (!(queue->arr = calloc(size, sizeof(node_t))))
         return NULL;
-    if (!(queue->lookup = calloc(size, sizeof(int))))
+    if (!(queue->lookup = malloc(size * sizeof(int))))
         return NULL;
+    memset(queue->lookup, -1, size * sizeof(int));
     queue->cap = size;
     queue->cnt = 0;
     return queue;
@@ -40,9 +42,6 @@ int queue_pop(queue_t *queue)
 
 void queue_decrese_key(queue_t *queue, int val, unsigned long long new)
 {
-    // for (size_t i = 0; i < queue->cap; i++)
-    //     printf("%d: %d\n", i, queue->lookup[i]);
-    // printf("%d %d\n\n", val, new);
     int node = queue_find(queue, val);
     queue->arr[node].key = new;
     if (new < queue->arr[get_parrent(queue, node)].key)

@@ -89,9 +89,9 @@ _Bool dijkstra_solve(void *dijkstra, int label)
         if (i == label)
             dij->dist[i] = 0;
         dij->prev[i] = -1;
-        queue_insert(queue, dij->dist[i], i);
     }
-    
+    queue_insert(queue, 0, 0);
+
     while (queue->cnt != 0)
     {
         int vertex = queue_pop(queue);
@@ -109,7 +109,10 @@ _Bool dijkstra_solve(void *dijkstra, int label)
             {
                 dij->dist[neighbor] = detour;
                 dij->prev[neighbor] = vertex;
-                queue_decrese_key(queue, neighbor, detour);
+                if (queue->lookup[neighbor] == -1)
+                    queue_insert(queue, detour, neighbor);
+                else
+                    queue_decrese_key(queue, neighbor, detour);
             }
         }
     }
